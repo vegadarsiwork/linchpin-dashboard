@@ -56,7 +56,7 @@ function RecordRow({ record }: { record: PayRecord }) {
         </div>
         <div className="flex items-center gap-3">
           {record.hasAttendanceOverrides && (
-            <AlertTriangle className="h-4 w-4 text-amber-500" title="Attendance overrides present" />
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
           )}
           <span className="text-sm font-semibold tabular-nums">{fmtINR(record.calculatedPay)}</span>
         </div>
