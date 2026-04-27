@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+  INTERN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  HOLIDAY
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Timeframe {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum TargetStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+}
+
+enum AdjustmentType {
+  BONUS
+  DEDUCTION
+  REIMBURSEMENT
+}
+
+// ─── NextAuth Models ──────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core Models ─────────────────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String?   @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  role              Role      @default(EMPLOYEE)
+  designation       String?
+  baseMonthlySalary Float?
+  joinDate          DateTime?
+  avatarUrl         String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  dailyLogs           DailyLog[]     @relation("UserDailyLogs")
+  adminSubmittedLogs  DailyLog[]     @relation("AdminDailyLogs")
+  weeklyLogs          WeeklyLog[]
+  monthlyLogs         MonthlyLog[]
+  attendance          Attendance[]   @relation("UserAttendance")
+  attendanceOverrides Attendance[]   @relation("AttendanceOverrides")
+  assignedTargets     Target[]       @relation("AssignedTo")
+  createdTargets      Target[]       @relation("AssignedBy")
+  calendarEvents      CalendarEvent[]
+  invoices            Invoice[]
+  payRecords          PayRecord[]
+  payAdjustments      PayAdjustment[] @relation("AdminPayAdjustments")
+}
+
+model DailyLog {
+  id                 String   @id @default(cuid())
+  userId             String
+  date               DateTime @db.Date
+  content            String   @db.Text
+  submittedAt        DateTime @default(now())
+  submittedByAdminId String?
+  overrideReason     String?  @db.Text
+
+  user        User  @relation("UserDailyLogs", fields: [userId], references: [id], onDelete: Cascade)
+  submittedBy User? @relation("AdminDailyLogs", fields: [submittedByAdminId], references: [id])
+
+  @@unique([userId, date])
+}
+
+model WeeklyLog {
+  id          String   @id @default(cuid())
+  userId      String
+  weekStart   DateTime @db.Date
+  rawSummary  String   @db.Text
+  aiSummary   String?  @db.Text
+  generatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+}
+
+model MonthlyLog {
+  id          String   @id @default(cuid())
+  userId      String
+  month       DateTime @db.Date
+  rawSummary  String   @db.Text
+  aiSummary   String?  @db.Text
+  generatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+}
+
+model Attendance {
+  id                  String           @id @default(cuid())
+  userId              String
+  date                DateTime         @db.Date
+  checkInTime         DateTime?
+  checkOutTime        DateTime?
+  status              AttendanceStatus
+  payMultiplier       Float            @default(1.0)
+  dailyLogSubmitted   Boolean          @default(false)
+  markedAt            DateTime         @default(now())
+  overrideReason      String?          @db.Text
+  overriddenByAdminId String?
+
+  user         User  @relation("UserAttendance", fields: [userId], references: [id], onDelete: Cascade)
+  overriddenBy User? @relation("AttendanceOverrides", fields: [overriddenByAdminId], references: [id])
+
+  @@unique([userId, date])
+}
+
+model Target {
+  id           String       @id @default(cuid())
+  assignedById String
+  assignedToId String
+  title        String
+  description  String?      @db.Text
+  priority     Priority
+  timeframe    Timeframe
+  dueDate      DateTime?
+  status       TargetStatus @default(PENDING)
+  createdAt    DateTime     @default(now())
+
+  assignedBy User @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedTo User @relation("AssignedTo", fields: [assignedToId], references: [id])
+}
+
+model CalendarEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  title         String
+  description   String?  @db.Text
+  startTime     DateTime
+  endTime       DateTime
+  isPrivate     Boolean  @default(false)
+  isCompanyWide Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailyReport {
+  id          String   @id @default(cuid())
+  date        DateTime @unique @db.Date
+  content     String   @db.Text
+  generatedAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String @db.Text
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  createdById   String
+  invoiceNumber String        @unique
+  clientName    String
+  clientAddress String?       @db.Text
+  clientGSTIN   String?
+  lineItems     Json
+  subtotal      Float
+  gstRate       Float
+  gstAmount     Float
+  totalAmount   Float
+  status        InvoiceStatus @default(DRAFT)
+  isQuotation   Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+
+  createdBy User @relation(fields: [createdById], references: [id])
+}
+
+model PayRecord {
+  id            String   @id @default(cuid())
+  userId        String
+  month         DateTime @db.Date
+  baseSalary    Float
+  workingDays   Int
+  presentDays   Int
+  lateDays      Int
+  absentDays    Int
+  basePay       Float
+  calculatedPay Float
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adjustments PayAdjustment[]
+
+  @@unique([userId, month])
+}
+
+model PayAdjustment {
+  id          String         @id @default(cuid())
+  payRecordId String
+  addedById   String
+  type        AdjustmentType
+  label       String
+  amount      Float
+  createdAt   DateTime       @default(now())
+
+  payRecord PayRecord @relation(fields: [payRecordId], references: [id], onDelete: Cascade)
+  addedBy   User      @relation("AdminPayAdjustments", fields: [addedById], references: [id])
+}
