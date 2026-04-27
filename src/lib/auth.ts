@@ -1,5 +1,4 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { redirect } from "next/navigation";
@@ -14,10 +13,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
     Credentials({
       name: "credentials",
       credentials: {
@@ -52,7 +47,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.role = user.role;
       }
 
-      // For OAuth users, role may not be on `user` — fetch from DB once
       if (token.id && !token.role) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
