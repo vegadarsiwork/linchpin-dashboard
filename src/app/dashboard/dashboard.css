@@ -1,0 +1,329 @@
+/* Dashboard / Admin scoped overrides. Client dashboard tokens live here. */
+
+body:has(.admin-shell) {
+  background-color: #fafafa !important;
+  color: #18181b !important;
+  overflow-x: visible !important;
+}
+
+body:has(.admin-shell)::after,
+body:has(.influencer-route-shell)::after {
+  display: none !important;
+}
+
+body:has(.influencer-route-shell) {
+  background-color: #f6f4ef !important;
+  color: #18181b !important;
+  overflow-x: hidden !important;
+}
+
+body:has(.admin-shell) ::selection {
+  background-color: rgba(124, 58, 237, 0.2);
+  color: #18181b;
+}
+
+body:has(.dashboard-shell):not(:has(.auth-shell)) {
+  background: #f7f7f8;
+  color: #18181b;
+  overflow-x: hidden !important;
+}
+
+.dashboard-shell,
+.admin-shell,
+.influencer-route-shell {
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+.dashboard-shell {
+  --app-bg: #f7f7f8;
+  --app-surface: #ffffff;
+  --app-surface-muted: #f4f4f5;
+  --app-border: #e4e4e7;
+  --app-border-strong: #d4d4d8;
+  --app-text: #18181b;
+  --app-heading: #09090b;
+  --app-subtle: #71717a;
+  --app-muted: #a1a1aa;
+  --app-accent: #7c3aed;
+  --app-accent-strong: #6d28d9;
+  --app-accent-soft: #f5f3ff;
+  --app-danger: #dc2626;
+  --app-warning: #d97706;
+  --app-success: #047857;
+  background: #f7f7f8;
+  color: var(--app-text);
+}
+
+.dashboard-shell .app-shell {
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+.dashboard-shell h1,
+.dashboard-shell h2,
+.dashboard-shell h3,
+.dashboard-shell h4,
+.dashboard-shell h5,
+.dashboard-shell h6 {
+  font-family: inherit;
+}
+
+.dashboard-shell .app-sidebar {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+.dashboard-shell .app-sidebar-brand {
+  background: var(--app-accent);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.dashboard-shell .app-panel {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: none;
+}
+
+.dashboard-shell .app-muted-panel {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  box-shadow: none;
+}
+
+.dashboard-shell .app-soft-panel {
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border);
+}
+
+.dashboard-shell .app-heading {
+  color: var(--app-heading);
+}
+
+.dashboard-shell .app-text {
+  color: var(--app-text);
+}
+
+.dashboard-shell .app-subtle {
+  color: var(--app-subtle);
+}
+
+.dashboard-shell .app-muted {
+  color: var(--app-muted);
+}
+
+.dashboard-shell .app-accent {
+  color: var(--app-accent);
+}
+
+.dashboard-shell .app-icon-surface {
+  align-items: center;
+  background: var(--app-accent-soft);
+  border: 1px solid #ede9fe;
+  border-radius: 0.375rem;
+  color: var(--app-accent);
+  display: inline-flex;
+  justify-content: center;
+}
+
+.dashboard-shell .app-nav-item {
+  background: transparent;
+  color: #52525b;
+}
+
+.dashboard-shell .app-nav-item:hover {
+  background: var(--app-surface-muted);
+  color: var(--app-heading);
+}
+
+.dashboard-shell .app-nav-active {
+  background: var(--app-accent);
+  color: #ffffff;
+}
+
+.dashboard-shell .app-nav-active:hover {
+  background: var(--app-accent-strong);
+  color: #ffffff;
+}
+
+.dashboard-shell .app-nav-locked {
+  background: transparent;
+  color: var(--app-muted);
+}
+
+.dashboard-shell .app-topbar {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--app-border);
+  backdrop-filter: blur(16px);
+}
+
+.dashboard-shell .app-input {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+}
+
+.dashboard-shell .app-input::placeholder {
+  color: var(--app-muted);
+}
+
+.dashboard-shell .app-input:focus {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.12);
+  outline: none;
+}
+
+.dashboard-desktop-sidebar,
+.admin-desktop-sidebar {
+  display: none;
+}
+
+.dashboard-briefing-row {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .dashboard-desktop-sidebar,
+  .admin-desktop-sidebar {
+    display: block;
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-briefing-row {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+.dashboard-shell table {
+  width: 100%;
+  color: var(--app-text);
+}
+
+.dashboard-shell thead,
+.dashboard-shell thead tr,
+.dashboard-shell tbody,
+.dashboard-shell tbody tr {
+  background: transparent !important;
+}
+
+.dashboard-shell th {
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-subtle);
+  font-weight: 600;
+}
+
+.dashboard-shell td {
+  border-color: var(--app-border);
+}
+
+.dashboard-shell tr:hover {
+  background-color: #fafafa;
+}
+
+.dashboard-shell .overflow-hidden:has(table) {
+  border-color: var(--app-border);
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.dashboard-shell button,
+.dashboard-shell a {
+  transition-property: color, background-color, border-color, transform;
+  transition-duration: 160ms;
+}
+
+.dashboard-shell button:active,
+.dashboard-shell a:active {
+  transform: translateY(1px);
+}
+
+.dashboard-shell .shadow-sm,
+.dashboard-shell .shadow-lg,
+.dashboard-shell .shadow-xl,
+.dashboard-shell .shadow-2xl {
+  box-shadow: none;
+}
+
+.dashboard-shell [class*="ring-violet"],
+.dashboard-shell [class*="focus:ring-violet"] {
+  --tw-ring-color: rgba(124, 58, 237, 0.2) !important;
+}
+
+body:has(.auth-shell),
+.dashboard-shell:has(.auth-shell) {
+  background: #f6f4ef !important;
+  color: #18181b !important;
+  overflow-x: hidden !important;
+}
+
+body:has(.auth-shell)::after,
+.dashboard-shell:has(.auth-shell)::after {
+  display: none !important;
+}
+
+.dashboard-shell .auth-shell {
+  background-color: #f6f4ef !important;
+  color: #18181b !important;
+}
+
+.dashboard-shell .auth-shell [class*="bg-white"] {
+  background-color: #fff !important;
+}
+
+.dashboard-shell .auth-shell [class*="bg-zinc-950"] {
+  background-color: #09090b !important;
+}
+
+.dashboard-shell .auth-shell [class*="border-zinc-100"],
+.dashboard-shell .auth-shell [class*="border-zinc-200"],
+.dashboard-shell .auth-shell [class*="border-zinc-300"] {
+  border-color: #e4e4e7 !important;
+}
+
+.dashboard-shell .auth-shell [class*="text-zinc-950"],
+.dashboard-shell .auth-shell [class*="text-zinc-900"],
+.dashboard-shell .auth-shell [class*="text-zinc-800"],
+.dashboard-shell .auth-shell [class*="text-zinc-700"] {
+  color: #18181b !important;
+}
+
+.dashboard-shell .auth-shell [class*="text-zinc-600"],
+.dashboard-shell .auth-shell [class*="text-zinc-500"],
+.dashboard-shell .auth-shell [class*="text-zinc-400"] {
+  color: #71717a !important;
+}
+
+.dashboard-shell .auth-shell input,
+.dashboard-shell .auth-shell select,
+.dashboard-shell .auth-shell textarea {
+  background-color: #fff !important;
+  color: #18181b !important;
+}
+
+.dashboard-shell .auth-shell input::placeholder {
+  color: #a1a1aa !important;
+}
+
+.dashboard-shell .auth-shell button[type="submit"] {
+  background-color: #7c3aed !important;
+  color: #fff !important;
+}
+
+.dashboard-shell .auth-shell a {
+  color: #4c1d95 !important;
+}
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-shell h5,
+.admin-shell h6 {
+  font-family: inherit;
+}

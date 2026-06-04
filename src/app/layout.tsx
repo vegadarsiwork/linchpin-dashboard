@@ -1,37 +1,29 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import "@uploadthing/react/styles.css";
 
 export const metadata: Metadata = {
-  title: "Linchpin",
-  description: "Workspace management for Linchpin Soft Solution",
+  title: "Linchpin Studio — Content That Converts",
+  description:
+    "We create high-impact short-form video content, reels, and brand films for ambitious brands. Scroll-stopping creative, delivered fast.",
+  keywords: ["digital marketing", "video production", "reels", "short form content", "brand films", "social media marketing"],
+  openGraph: {
+    title: "Linchpin Studio — Content That Converts",
+    description: "High-impact video content for ambitious brands.",
+    type: "website",
+  },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster />
-      </body>
+    <html lang="en">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=satoshi@400,500,700&display=swap"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

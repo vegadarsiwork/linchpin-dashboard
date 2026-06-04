@@ -1,89 +1,51 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
-import type { Role } from "@prisma/client";
+import { query, queryOne } from '@/lib/db'
+import { getSessionUserId } from '@/lib/auth/sessions'
+import type { Organisation, User } from '@/lib/types'
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
-  providers: [
-    Credentials({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
-
-        if (!user || !user.password) return null;
-
-        const passwordMatch = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!passwordMatch) return null;
-
-        return user;
-      },
-    }),
-  ],
-  callbacks: {
-    async jwt({ token, user }) {
-      // Populate on first sign-in when `user` is present
-      if (user) {
-        token.id = user.id;
-        token.role = user.role;
-      }
-
-      if (token.id && !token.role) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.id as string },
-          select: { role: true },
-        });
-        if (dbUser) token.role = dbUser.role;
-      }
-
-      return token;
-    },
-
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as Role;
-      }
-      return session;
-    },
-  },
-});
-
-// ─── Server-side session utilities ───────────────────────────────────────────
-
-export async function getCurrentUser() {
-  const session = await auth();
-  return session?.user ?? null;
+export type CurrentUser = {
+  user: User
+  org: Organisation | null
 }
 
-export async function requireAuth() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  return user;
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const userId = await getSessionUserId()
+  if (!userId) return null
+
+  const profile = await queryOne<User>('select * from users where id = $1', [
+    userId,
+  ])
+  if (!profile) return null
+
+  let org: Organisation | null = null
+  if (profile.org_id) {
+    org = await queryOne<Organisation>(
+      'select * from organisations where id = $1',
+      [profile.org_id]
+    )
+  }
+
+  await query('update users set last_seen_at = now() where id = $1', [userId])
+
+  return { user: profile, org }
 }
 
-export async function requireAdmin() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-  if (user.role !== "ADMIN") redirect("/dashboard");
-  return user;
+export async function requireSuperadmin(): Promise<CurrentUser> {
+  const me = await getCurrentUser()
+  if (!me) throw new Error('UNAUTHENTICATED')
+  if (me.user.role !== 'superadmin') throw new Error('FORBIDDEN')
+  return me
+}
+
+export async function requireClient(): Promise<CurrentUser> {
+  const me = await getCurrentUser()
+  if (!me) throw new Error('UNAUTHENTICATED')
+  if (me.user.role !== 'client') throw new Error('FORBIDDEN')
+  return me
+}
+
+export async function requireInfluencer(): Promise<CurrentUser> {
+  const me = await getCurrentUser()
+  if (!me) throw new Error('UNAUTHENTICATED')
+  if (me.user.role !== 'influencer') throw new Error('FORBIDDEN')
+  return me
 }
