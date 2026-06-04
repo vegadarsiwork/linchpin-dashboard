@@ -29,9 +29,11 @@ export default async function InfluencersPage() {
   }))
 
   const totalActive = influencers.length
-  const withEng = influencers.filter((i) => i.engagement_rate != null)
-  const avgEngagement = withEng.length > 0
-    ? withEng.reduce((s, i) => s + (i.engagement_rate ?? 0), 0) / withEng.length
+  const engagementValues = influencers
+    .map((i) => Number(i.engagement_rate))
+    .filter((value) => Number.isFinite(value))
+  const avgEngagement = engagementValues.length > 0
+    ? engagementValues.reduce((sum, value) => sum + value, 0) / engagementValues.length
     : 0
   const uniqueCities = new Set(influencers.map((i) => i.city).filter(Boolean)).size
   const totalCampaigns = campaigns.length

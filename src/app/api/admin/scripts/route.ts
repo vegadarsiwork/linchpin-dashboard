@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
         title: 'New script ready for review',
         body: body.title!.trim(),
         link: `/dashboard/scripts/${scriptId}`,
-        channels: ['in_app', 'email'],
+        channels: ['in_app'],
       }))
       await admin.from('notifications').insert(rows)
     }

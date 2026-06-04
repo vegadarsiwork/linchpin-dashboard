@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/db/client'
 import { getCurrentUser } from '@/lib/auth'
 import type { NotificationChannel, NotificationPrefs } from '@/lib/types'
 
-const VALID_CHANNELS: NotificationChannel[] = ['in_app', 'email', 'whatsapp']
+const VALID_CHANNELS: NotificationChannel[] = ['in_app']
 const VALID_KEYS = new Set([
   'new_lead',
   'reel_approval',

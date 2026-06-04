@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2, Lock, Mail, MessageSquare, Phone, User as UserIcon } from 'lucide-react'
+import { Loader2, Lock, MessageSquare, Phone, User as UserIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,31 +31,31 @@ const NOTIF_CATEGORIES: Array<{
     key: 'new_lead',
     label: 'New leads captured',
     description: 'When a new lead lands in your CRM.',
-    channels: ['email', 'whatsapp'],
+    channels: [],
   },
   {
     key: 'reel_approval',
     label: 'Reels ready for approval',
     description: 'When new content is awaiting your sign-off.',
-    channels: ['email'],
+    channels: [],
   },
   {
     key: 'followup',
     label: 'Follow-up reminders',
     description: "When it's time to check in on a lead.",
-    channels: ['email', 'whatsapp'],
+    channels: [],
   },
   {
     key: 'deliverable',
     label: 'Deliverables completed',
     description: "When something we've shipped is ready to review.",
-    channels: ['email'],
+    channels: [],
   },
   {
     key: 'escalation',
     label: 'Zap escalations',
     description: 'When the WhatsApp AI agent needs human help.',
-    channels: ['email', 'whatsapp'],
+    channels: [],
   },
 ]
 
@@ -65,10 +65,12 @@ const CHANNEL_LABELS: Record<NotificationChannel, string> = {
   whatsapp: 'WhatsApp',
 }
 
+const COMING_SOON_CHANNELS: NotificationChannel[] = ['email', 'whatsapp']
+
 function defaultPrefs(): NotificationPrefs {
   const out: NotificationPrefs = {}
   for (const c of NOTIF_CATEGORIES) {
-    out[c.key] = ['in_app', ...c.channels]
+    out[c.key] = ['in_app']
   }
   return out
 }
@@ -227,7 +229,7 @@ function ProfileSection({
               inputMode="tel"
             />
             <p className="text-[11px] text-zinc-500">
-              Used for WhatsApp notifications. Include country code.
+              Stored for your account manager. WhatsApp notifications are coming soon.
             </p>
           </div>
         </div>
@@ -379,19 +381,10 @@ function NotificationsSection({
   initial: NotificationPrefs
   onSaved: () => void
 }) {
-  const [prefs, setPrefs] = useState<NotificationPrefs>(() =>
+  const [prefs] = useState<NotificationPrefs>(() =>
     mergeDefaults(initial)
   )
   const [saving, setSaving] = useState(false)
-
-  function toggle(key: NotifCategoryKey, channel: NotificationChannel) {
-    setPrefs((prev) => {
-      const cur = new Set(prev[key] ?? [])
-      if (cur.has(channel)) cur.delete(channel)
-      else cur.add(channel)
-      return { ...prev, [key]: Array.from(cur) }
-    })
-  }
 
   async function save() {
     setSaving(true)
@@ -417,12 +410,11 @@ function NotificationsSection({
   return (
     <SectionShell
       title="Notifications"
-      description="Choose how we reach you for each event."
+      description="In-app notifications are live. Email and WhatsApp are coming soon."
       icon={MessageSquare}
     >
       <div className="space-y-4">
         {NOTIF_CATEGORIES.map((cat) => {
-          const enabled = prefs[cat.key] ?? []
           return (
             <div
               key={cat.key}
@@ -438,30 +430,18 @@ function NotificationsSection({
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {cat.channels.map((ch) => {
-                    const active = enabled.includes(ch)
-                    return (
-                      <button
-                        key={ch}
-                        type="button"
-                        onClick={() => toggle(cat.key, ch)}
-                        className={cn(
-                          'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors',
-                          active
-                            ? 'border-violet-600 bg-violet-600 text-white'
-                            : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300'
-                        )}
-                        aria-pressed={active}
-                      >
-                        {ch === 'email' ? (
-                          <Mail className="h-3 w-3" />
-                        ) : (
-                          <MessageSquare className="h-3 w-3" />
-                        )}
-                        {CHANNEL_LABELS[ch]}
-                      </button>
-                    )
-                  })}
+                  <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-3 text-xs font-medium text-violet-700">
+                    <MessageSquare className="h-3 w-3" />
+                    In-app
+                  </span>
+                  {COMING_SOON_CHANNELS.map((ch) => (
+                    <span
+                      key={ch}
+                      className="inline-flex h-8 items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-3 text-xs font-medium text-zinc-500"
+                    >
+                      {CHANNEL_LABELS[ch]} coming soon
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -487,7 +467,7 @@ function NotificationsSection({
 function mergeDefaults(prefs: NotificationPrefs): NotificationPrefs {
   const merged: NotificationPrefs = { ...defaultPrefs() }
   for (const [k, v] of Object.entries(prefs)) {
-    if (Array.isArray(v)) merged[k] = v as NotificationChannel[]
+    if (Array.isArray(v) && v.includes('in_app')) merged[k] = ['in_app']
   }
   return merged
 }

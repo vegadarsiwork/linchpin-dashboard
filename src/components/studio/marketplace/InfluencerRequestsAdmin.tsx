@@ -63,13 +63,13 @@ export function InfluencerRequestsAdmin() {
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<string | null>(null)
 
-  async function loadRequests() {
-    setLoading(true)
+  async function loadRequests(showLoading = true) {
+    if (showLoading) setLoading(true)
     const res = await fetch('/api/admin/influencer-requests')
     const json = await readJson(res)
     if (res.ok) setRequests((json.requests as AdminRequest[]) ?? [])
     else toast.error(String(json.error ?? 'Failed to load requests'))
-    setLoading(false)
+    if (showLoading) setLoading(false)
   }
 
   useEffect(() => {
@@ -78,6 +78,12 @@ export function InfluencerRequestsAdmin() {
 
   async function updateStatus(id: string, status: string) {
     setSavingId(id)
+    const previous = requests
+    setRequests((current) =>
+      current.map((request) =>
+        request.id === id ? { ...request, status } : request
+      )
+    )
     const res = await fetch('/api/admin/influencer-requests', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -86,11 +92,12 @@ export function InfluencerRequestsAdmin() {
     const json = await readJson(res)
     setSavingId(null)
     if (!res.ok) {
+      setRequests(previous)
       toast.error(String(json.error ?? 'Failed to update request'))
       return
     }
     toast.success('Request updated')
-    await loadRequests()
+    await loadRequests(false)
   }
 
   if (loading) {

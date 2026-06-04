@@ -4,7 +4,6 @@ import { getCurrentUser } from '@/lib/auth'
 
 type OrgUserContact = {
   id: string
-  email: string
 }
 
 const ALLOWED_STATUSES = new Set([
@@ -157,33 +156,10 @@ export async function POST(req: NextRequest) {
         title: 'New reel ready for approval',
         body: insert.title,
         link: '/dashboard/reels',
-        channels: ['in_app', 'email'],
+        channels: ['in_app'],
       }))
       await admin.from('notifications').insert(rows)
 
-      // Best-effort email via Resend
-      const apiKey = process.env.RESEND_API_KEY
-      if (apiKey) {
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
-        await Promise.allSettled(
-          contacts.map((u) =>
-            fetch('https://api.resend.com/emails', {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                from: 'Linchpin Studio <noreply@linchpinstudio.in>',
-                to: [u.email],
-                subject: `New reel ready for approval: ${insert.title}`,
-                html: `<p>Your Studio team has uploaded a new reel for your approval.</p>
-                       <p><a href="${appUrl}/dashboard/reels">Review on the dashboard →</a></p>`,
-              }),
-            })
-          )
-        )
-      }
     }
   } catch {
     // swallow side-effect errors
