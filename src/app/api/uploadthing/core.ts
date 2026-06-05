@@ -66,13 +66,17 @@ export const ourFileRouter = {
       if (me.user.role !== 'influencer' && me.user.role !== 'superadmin') {
         throw new UploadThingError('Forbidden')
       }
-      return { userId: me.user.id, role: me.user.role }
+      const influencer = me.user.role === 'influencer'
+        ? await queryOne<Influencer>('select id from influencers where user_id = $1', [me.user.id])
+        : null
+      return { userId: me.user.id, role: me.user.role, influencerId: influencer?.id ?? null }
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const uploaded = file as UploadedFile
       const asset = await createMediaAsset({
         file: uploaded,
         userId: metadata.userId,
+        influencerId: metadata.influencerId,
         assetKind: 'portfolio',
         metadata: { purpose: 'avatar' },
       })
@@ -93,13 +97,17 @@ export const ourFileRouter = {
       if (me.user.role !== 'influencer' && me.user.role !== 'superadmin') {
         throw new UploadThingError('Forbidden')
       }
-      return { userId: me.user.id, role: me.user.role }
+      const influencer = me.user.role === 'influencer'
+        ? await queryOne<Influencer>('select id from influencers where user_id = $1', [me.user.id])
+        : null
+      return { userId: me.user.id, role: me.user.role, influencerId: influencer?.id ?? null }
     })
     .onUploadComplete(async ({ metadata, file }) => {
       const uploaded = file as UploadedFile
       const asset = await createMediaAsset({
         file: uploaded,
         userId: metadata.userId,
+        influencerId: metadata.influencerId,
         assetKind: 'portfolio',
         metadata: { purpose: 'cover_photo' },
       })

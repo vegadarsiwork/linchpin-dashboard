@@ -49,7 +49,7 @@ export function ReelPreview({ influencer, match }: { influencer: PublicInfluence
           )}
           <div className="absolute inset-x-8 top-12 h-24 rounded-full bg-white/10 blur-2xl" />
           <div className="absolute left-4 right-4 top-5 flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.16em] text-white/70">
-            <span>Trial GIF</span><span>{influencer.platform ?? 'Creator'}</span>
+            <span>Trial Reel</span><span>{influencer.platform ?? 'Creator'}</span>
           </div>
           <div className="absolute inset-x-5 top-1/2 -translate-y-1/2 space-y-3">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/15 text-white ring-1 ring-white/25">

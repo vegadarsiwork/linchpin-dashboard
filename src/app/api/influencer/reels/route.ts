@@ -5,7 +5,11 @@ import type { Influencer, InfluencerReel } from '@/lib/types'
 
 function isAllowedPreviewUrl(url: string) {
   const clean = url.split('?')[0].toLowerCase()
-  return clean.endsWith('.gif') || clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.png') || clean.endsWith('.webp')
+  return clean.endsWith('.gif') || clean.endsWith('.mp4') || clean.endsWith('.webm') || clean.endsWith('.mov') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.png') || clean.endsWith('.webp')
+}
+
+function isVideoPreviewUrl(url: string) {
+  return Boolean(url.toLowerCase().split('?')[0].match(/\.(mp4|webm|mov)$/))
 }
 
 export async function POST(req: NextRequest) {
@@ -45,10 +49,10 @@ export async function POST(req: NextRequest) {
   const previewUrl = body.preview_url?.trim()
   const originalUrl = body.original_url?.trim() || null
   if (!previewUrl || !isAllowedPreviewUrl(previewUrl)) {
-    return NextResponse.json({ error: 'Upload or paste a direct GIF, video, or image preview URL.' }, { status: 400 })
+    return NextResponse.json({ error: 'Upload or paste a direct MP4, WebM, GIF, or image preview URL.' }, { status: 400 })
   }
 
-  const isVideo = previewUrl?.toLowerCase().split('?')[0].match(/\.(mp4|webm)$/)
+  const isVideo = isVideoPreviewUrl(previewUrl)
   if (body.is_featured) {
     await query('update influencer_reels set is_featured = false where influencer_id = $1', [influencer.id])
   }

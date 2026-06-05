@@ -95,6 +95,7 @@ export function InfluencerProfileForm({ profile, setProfile, saving, onSave, com
         <div className="space-y-2 sm:col-span-2">
           <span className="text-sm font-medium block">Profile photo</span>
           <input className={fieldClass()} value={profile.avatar_url} onChange={(e) => setProfile({ ...profile, avatar_url: e.target.value })} placeholder="Upload or paste image URL" />
+          <p className="text-xs text-zinc-500">Square JPG, PNG, or WebP up to 4MB works best. Upload fills the URL; click Save to publish it.</p>
           <UploadButton
             endpoint="avatarUploader"
             onClientUploadComplete={(files) => {
@@ -110,6 +111,7 @@ export function InfluencerProfileForm({ profile, setProfile, saving, onSave, com
         <div className="space-y-2 sm:col-span-2">
           <span className="text-sm font-medium block">Cover photo</span>
           <input className={fieldClass()} value={profile.cover_photo_url} onChange={(e) => setProfile({ ...profile, cover_photo_url: e.target.value })} placeholder="Or paste cover photo URL" />
+          <p className="text-xs text-zinc-500">Use a wide JPG, PNG, or WebP up to 8MB. This is optional but makes the public profile feel complete.</p>
           <UploadButton
             endpoint="coverUploader"
             onClientUploadComplete={(files) => {

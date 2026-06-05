@@ -222,7 +222,7 @@ export function InfluencerMarketplaceClient({ org }: { org: Organisation | null 
       <div className="app-panel rounded-lg p-5">
         <div className="max-w-3xl">
           <div className="app-accent text-xs font-semibold uppercase tracking-[0.18em]">Managed creator marketplace</div>
-          <h2 className="app-heading mt-2 text-2xl font-semibold tracking-tight">Browse trial GIFs, request through Linchpin.</h2>
+          <h2 className="app-heading mt-2 text-2xl font-semibold tracking-tight">Browse trial reels, request through Linchpin.</h2>
           <p className="app-subtle mt-2 text-sm leading-6">
             Creator contact details stay private. Your Studio team confirms availability, pricing, scripting, and delivery inside the platform.
           </p>

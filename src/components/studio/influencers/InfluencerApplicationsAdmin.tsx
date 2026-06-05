@@ -48,6 +48,11 @@ function formatDate(value?: string | null) {
   }).format(date)
 }
 
+function isVideoPreviewUrl(url: string | null | undefined) {
+  if (!url) return false
+  return Boolean(url.toLowerCase().split('?')[0].match(/\.(mp4|webm|mov)$/))
+}
+
 export function InfluencerApplicationsAdmin({
   initialProfiles = [],
   initialReels = [],
@@ -169,16 +174,17 @@ export function InfluencerApplicationsAdmin({
 
       <section className="rounded-xl border border-zinc-200 bg-white">
         <div className="border-b border-zinc-200 p-4">
-          <h2 className="font-semibold text-zinc-900">Trial GIFs</h2>
+          <h2 className="font-semibold text-zinc-900">Trial reels</h2>
         </div>
         <div className="grid gap-3 p-4">
           {reels.map((reel) => {
             const src = reel.gif_url || reel.video_url || reel.thumbnail_url
+            const isVideo = Boolean(reel.video_url) || isVideoPreviewUrl(src)
             return (
               <div key={reel.id} className="overflow-hidden rounded-lg border border-zinc-200">
                 <div className="grid grid-cols-[110px_1fr]">
                   <div className="aspect-[9/16] bg-zinc-100">
-                    {src && reel.video_url ? <video src={src} autoPlay muted loop playsInline className="h-full w-full object-cover" /> : src ? (
+                    {src && isVideo ? <video src={src} autoPlay muted loop playsInline className="h-full w-full object-cover" /> : src ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={src} alt={reel.title} className="h-full w-full object-cover" />
                     ) : null}
@@ -198,7 +204,7 @@ export function InfluencerApplicationsAdmin({
               </div>
             )
           })}
-          {reels.length === 0 && <div className="p-8 text-center text-sm text-zinc-500">No trial GIFs yet.</div>}
+          {reels.length === 0 && <div className="p-8 text-center text-sm text-zinc-500">No trial reels yet.</div>}
         </div>
       </section>
       </div>

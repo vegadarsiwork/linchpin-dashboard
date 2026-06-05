@@ -60,10 +60,10 @@ export function InfluencerSignupForm() {
             Put your trial reels in front of brands without chasing DMs.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-zinc-600">
-            Build a Linchpin-approved creator profile, upload GIF previews, and respond to campaign requests from one place. Linchpin handles client coordination.
+            Build a Linchpin-approved creator profile, upload short reel previews, and respond to campaign requests from one place. Linchpin handles client coordination.
           </p>
           <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
-            {['Profile review', 'GIF previews', 'No direct negotiation'].map((item) => (
+            {['Profile review', 'Reel previews', 'No direct negotiation'].map((item) => (
               <div key={item} className="border-t border-zinc-200 pt-3 text-sm font-medium text-zinc-700">{item}</div>
             ))}
           </div>

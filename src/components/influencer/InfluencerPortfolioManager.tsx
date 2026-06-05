@@ -17,6 +17,11 @@ function arrayFromText(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+function isVideoPreviewUrl(url: string | null | undefined) {
+  if (!url) return false
+  return Boolean(url.toLowerCase().split('?')[0].match(/\.(mp4|webm|mov)$/))
+}
+
 function StatusBadge({ status }: { status: string }) {
   const STATUS_COPY: Record<string, { label: string; cls: string }> = {
     draft: { label: 'Draft', cls: 'bg-zinc-100 text-zinc-700 ring-zinc-200' },
@@ -117,7 +122,7 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
     <div className="space-y-5" id="portfolio">
       <form onSubmit={addReel} className={cn(panelClass, 'p-5')}>
         <h2 className="text-lg font-semibold text-zinc-950">Trial reels</h2>
-        <p className="mt-1 text-sm text-zinc-500">Upload a small GIF/video preview here. For full-quality originals, paste a Google Drive or similar private delivery link.</p>
+        <p className="mt-1 text-sm text-zinc-500">Upload a short MP4/WebM preview here. It autoplays muted in the marketplace like a reel preview. Keep full-quality originals in a private Drive link.</p>
         <div className="mt-4 space-y-3">
           <input className={fieldClass()} value={reelForm.title} onChange={(e) => setReelForm({ ...reelForm, title: e.target.value })} placeholder="Reel title" />
           <UploadButton
@@ -134,7 +139,8 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
               allowedContent: 'text-xs text-zinc-500',
             }}
           />
-          <input className={fieldClass()} value={reelForm.preview_url} onChange={(e) => setReelForm({ ...reelForm, preview_url: e.target.value })} placeholder="Preview URL from UploadThing or direct GIF/video URL" required />
+          <p className="text-xs text-zinc-500">UploadThing accepts images up to 32MB or videos up to 64MB. The uploaded URL fills this field automatically.</p>
+          <input className={fieldClass()} value={reelForm.preview_url} onChange={(e) => setReelForm({ ...reelForm, preview_url: e.target.value })} placeholder="Preview URL from UploadThing or direct MP4/WebM/image URL" required />
           <input className={fieldClass()} value={reelForm.original_url} onChange={(e) => setReelForm({ ...reelForm, original_url: e.target.value })} placeholder="Optional full-quality Drive link" />
           <input className={fieldClass()} value={reelForm.category_tags} onChange={(e) => setReelForm({ ...reelForm, category_tags: e.target.value })} placeholder="skincare, tutorial" />
           <label className="flex items-center gap-2 text-sm text-zinc-600">
@@ -150,7 +156,7 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
       <div className="grid grid-cols-2 gap-3">
         {sortedReels.map((reel, idx) => {
           const src = reel.gif_url || reel.video_url || reel.thumbnail_url
-          const isVideo = Boolean(reel.video_url)
+          const isVideo = Boolean(reel.video_url) || isVideoPreviewUrl(src)
           const isFirst = idx === 0
           const isLast = idx === sortedReels.length - 1
           return (

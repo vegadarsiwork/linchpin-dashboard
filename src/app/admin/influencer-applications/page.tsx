@@ -56,7 +56,7 @@ export default async function InfluencerApplicationsPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Creator applications</h1>
-        <p className="mt-1 text-sm text-zinc-500">Approve influencer-owned profiles and trial GIFs before clients can request them.</p>
+        <p className="mt-1 text-sm text-zinc-500">Approve influencer-owned profiles and trial reel previews before clients can request them.</p>
       </div>
       <InfluencerApplicationsAdmin initialProfiles={profiles} initialReels={reels} />
     </div>

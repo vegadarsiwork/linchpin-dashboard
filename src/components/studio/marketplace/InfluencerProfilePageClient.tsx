@@ -25,6 +25,11 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <div className="app-accent text-xs font-semibold uppercase tracking-widest mb-3">{children}</div>
 }
 
+function isVideoPreviewUrl(url: string | null | undefined) {
+  if (!url) return false
+  return Boolean(url.toLowerCase().split('?')[0].match(/\.(mp4|webm|mov)$/))
+}
+
 export function InfluencerProfilePageClient({
   influencer,
   reels,
@@ -152,9 +157,12 @@ export function InfluencerProfilePageClient({
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {reels.map((reel) => {
                   const thumb = reel.thumbnail_url ?? reel.gif_url ?? reel.video_url
+                  const isVideo = Boolean(reel.video_url) || isVideoPreviewUrl(thumb)
                   return (
                     <div key={reel.id} className="relative aspect-[9/16] overflow-hidden rounded-lg bg-zinc-100">
-                      {thumb ? (
+                      {thumb && isVideo ? (
+                        <video src={thumb} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                      ) : thumb ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={thumb} alt={reel.title} className="h-full w-full object-cover" />
                       ) : (
