@@ -57,7 +57,7 @@ async function createMediaAsset(args: {
 export const ourFileRouter = {
   avatarUploader: f({
     image: {
-      maxFileSize: '4MB',
+      maxFileSize: '2MB',
       maxFileCount: 1,
     },
   })
@@ -88,7 +88,7 @@ export const ourFileRouter = {
 
   coverUploader: f({
     image: {
-      maxFileSize: '8MB',
+      maxFileSize: '4MB',
       maxFileCount: 1,
     },
   })
@@ -119,11 +119,11 @@ export const ourFileRouter = {
 
   trialReelPreview: f({
     image: {
-      maxFileSize: '32MB',
+      maxFileSize: '8MB',
       maxFileCount: 1,
     },
     video: {
-      maxFileSize: '64MB',
+      maxFileSize: '16MB',
       maxFileCount: 1,
     },
   })

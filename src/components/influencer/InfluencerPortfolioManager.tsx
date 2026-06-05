@@ -139,7 +139,7 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
               allowedContent: 'text-xs text-zinc-500',
             }}
           />
-          <p className="text-xs text-zinc-500">UploadThing accepts images up to 32MB or videos up to 64MB. The uploaded URL fills this field automatically.</p>
+          <p className="text-xs text-zinc-500">UploadThing accepts image/GIF previews up to 8MB or video previews up to 16MB. The uploaded URL fills this field automatically.</p>
           <input className={fieldClass()} value={reelForm.preview_url} onChange={(e) => setReelForm({ ...reelForm, preview_url: e.target.value })} placeholder="Preview URL from UploadThing or direct MP4/WebM/image URL" required />
           <input className={fieldClass()} value={reelForm.original_url} onChange={(e) => setReelForm({ ...reelForm, original_url: e.target.value })} placeholder="Optional full-quality Drive link" />
           <input className={fieldClass()} value={reelForm.category_tags} onChange={(e) => setReelForm({ ...reelForm, category_tags: e.target.value })} placeholder="skincare, tutorial" />
