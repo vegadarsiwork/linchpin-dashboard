@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { CheckCircle2, Clock, Pencil, ShieldCheck, XCircle } from 'lucide-react'
 import type { Influencer, InfluencerReel } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { InfluencerProfileForm, type ProfileState } from './InfluencerProfileForm'
@@ -95,6 +95,7 @@ export function InfluencerDashboardClient({
     platform_links: influencer.platform_links ?? {},
     platform_follower_counts: influencer.platform_follower_counts ?? {},
   })
+  const [approvalStatus, setApprovalStatus] = useState(influencer.approval_status)
   const [localRequests, setLocalRequests] = useState(requests)
   const [busyRequest, setBusyRequest] = useState<string | null>(null)
 
@@ -171,6 +172,7 @@ export function InfluencerDashboardClient({
       toast.error(json.error ?? 'Could not save profile')
       return
     }
+    if (submit) setApprovalStatus('pending_review')
     toast.success(submit ? 'Profile submitted for review' : 'Profile saved')
   }
 
@@ -194,9 +196,82 @@ export function InfluencerDashboardClient({
   }
 
   const pendingCount = localRequests.filter((r) => r.status === 'requested').length
+  const isPendingReview = approvalStatus === 'pending_review'
 
   return (
     <div className="space-y-8">
+      {isPendingReview && (
+        <section className={cn(panelClass, 'overflow-hidden')}>
+          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_280px]">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Under Linchpin review
+              </div>
+              <div>
+                <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
+                  Sit tight, we&apos;re reviewing your profile.
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+                  Your creator profile has been sent to the Linchpin team. We&apos;ll review your public bio,
+                  trial reels, and campaign fit before making it visible to brands.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="#profile-form"
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit profile
+                </a>
+                <a
+                  href="#portfolio"
+                  className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+                >
+                  Add another trial reel
+                </a>
+              </div>
+            </div>
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                    Profile progress
+                  </div>
+                  <div className="mt-1 text-3xl font-bold tabular-nums text-zinc-950">
+                    {completion}%
+                  </div>
+                </div>
+                <StatusBadge status={approvalStatus} />
+              </div>
+              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-[#7c3aed] transition-all"
+                  style={{ width: `${completion}%` }}
+                />
+              </div>
+              {missingItems.length > 0 ? (
+                <div className="mt-4 space-y-1">
+                  <div className="text-xs font-medium text-zinc-600">Still worth improving</div>
+                  {missingItems.slice(0, 4).map((item) => (
+                    <div key={item} className="flex items-center gap-1.5 text-xs text-zinc-500">
+                      <Clock className="h-3 w-3 shrink-0" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  All required profile sections are complete.
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Home widgets */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Profile completeness */}
@@ -225,9 +300,9 @@ export function InfluencerDashboardClient({
         {/* Profile status */}
         <div className={cn(panelClass, 'p-4 space-y-2')}>
           <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Profile status</div>
-          <StatusBadge status={influencer.approval_status} />
-          <p className="text-xs text-zinc-500">{APPROVAL_STATUS_DESCRIPTIONS[influencer.approval_status] ?? ''}</p>
-          {influencer.rejection_reason && influencer.approval_status === 'rejected' && (
+          <StatusBadge status={approvalStatus} />
+          <p className="text-xs text-zinc-500">{APPROVAL_STATUS_DESCRIPTIONS[approvalStatus] ?? ''}</p>
+          {influencer.rejection_reason && approvalStatus === 'rejected' && (
             <p className="text-xs text-red-600 bg-red-50 rounded p-2">{influencer.rejection_reason}</p>
           )}
         </div>
