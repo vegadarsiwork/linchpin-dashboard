@@ -35,9 +35,10 @@ function StatusBadge({ status }: { status: string }) {
 
 type Props = {
   initialReels: InfluencerReel[]
+  onReelsChange?: (reels: InfluencerReel[]) => void
 }
 
-export function InfluencerPortfolioManager({ initialReels }: Props) {
+export function InfluencerPortfolioManager({ initialReels, onReelsChange }: Props) {
   const [localReels, setLocalReels] = useState(() =>
     [...initialReels].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
   )
@@ -61,10 +62,14 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
       toast.error(json.error ?? 'Could not add trial reel')
       return
     }
-    setLocalReels((current) => [
-      json.reel as InfluencerReel,
-      ...current.map((reel) => reelForm.is_featured ? { ...reel, is_featured: false } : reel),
-    ])
+    setLocalReels((current) => {
+      const next = [
+        json.reel as InfluencerReel,
+        ...current.map((reel) => reelForm.is_featured ? { ...reel, is_featured: false } : reel),
+      ]
+      onReelsChange?.(next)
+      return next
+    })
     setReelForm({ title: '', preview_url: '', original_url: '', category_tags: '', is_featured: true })
     toast.success('Trial reel added for review')
   }
@@ -81,7 +86,11 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
       toast.error(json.error ?? 'Could not delete reel')
       return
     }
-    setLocalReels((current) => current.filter((r) => r.id !== id))
+    setLocalReels((current) => {
+      const next = current.filter((r) => r.id !== id)
+      onReelsChange?.(next)
+      return next
+    })
     toast.success('Reel deleted')
   }
 
@@ -108,11 +117,15 @@ export function InfluencerPortfolioManager({ initialReels }: Props) {
       const bOrder = next[swapIdx].display_order
       next[idx] = { ...next[idx], display_order: bOrder }
       next[swapIdx] = { ...next[swapIdx], display_order: aOrder }
-      return next.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      const ordered = next.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      onReelsChange?.(ordered)
+      return ordered
     })
     // If the server returned updated reels, use those instead
     if (json.reels) {
-      setLocalReels([...(json.reels as InfluencerReel[])].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0)))
+      const next = [...(json.reels as InfluencerReel[])].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      setLocalReels(next)
+      onReelsChange?.(next)
     }
   }
 

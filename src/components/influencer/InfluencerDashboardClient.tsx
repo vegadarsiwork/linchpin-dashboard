@@ -2,7 +2,19 @@
 
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { CheckCircle2, Clock, Pencil, ShieldCheck, XCircle } from 'lucide-react'
+import {
+  BarChart3,
+  CheckCircle2,
+  Clock,
+  Eye,
+  FileVideo,
+  Megaphone,
+  Pencil,
+  ShieldCheck,
+  Sparkles,
+  ToggleRight,
+  XCircle,
+} from 'lucide-react'
 import type { Influencer, InfluencerReel } from '@/lib/types'
 import { cn } from '@/lib/utils'
 import { InfluencerProfileForm, type ProfileState } from './InfluencerProfileForm'
@@ -28,8 +40,8 @@ type CreatorRequest = {
 const STATUS_COPY: Record<string, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'bg-zinc-100 text-zinc-700 ring-zinc-200' },
   pending_review: { label: 'Pending review', cls: 'bg-amber-50 text-amber-800 ring-amber-200' },
-  approved: { label: 'Approved', cls: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
-  rejected: { label: 'Needs changes', cls: 'bg-red-50 text-red-800 ring-red-200' },
+  approved: { label: 'Live', cls: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
+  rejected: { label: 'Changes needed', cls: 'bg-red-50 text-red-800 ring-red-200' },
   requested: { label: 'Requested', cls: 'bg-amber-50 text-amber-800 ring-amber-200' },
   under_review: { label: 'Linchpin reviewing', cls: 'bg-sky-50 text-sky-800 ring-sky-200' },
   confirmed: { label: 'Confirmed', cls: 'bg-emerald-50 text-emerald-800 ring-emerald-200' },
@@ -40,6 +52,7 @@ const STATUS_COPY: Record<string, { label: string; cls: string }> = {
 }
 
 const panelClass = 'rounded-lg border border-zinc-200/80 bg-white shadow-sm'
+const softPanelClass = 'rounded-lg border border-zinc-200 bg-[#fbfaf7]'
 
 function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_COPY[status] ?? STATUS_COPY.draft
@@ -50,11 +63,162 @@ function arrayFromText(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
-const APPROVAL_STATUS_DESCRIPTIONS: Record<string, string> = {
-  draft: 'Complete your profile and submit for review',
-  pending_review: 'Under Linchpin review',
-  approved: 'Live on marketplace',
-  rejected: 'Needs changes - check rejection reason',
+function formatDate(value: string | null | undefined) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium' }).format(date)
+}
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+}: {
+  label: string
+  value: string | number
+  icon: typeof BarChart3
+  hint?: string
+}) {
+  return (
+    <div className={cn(panelClass, 'p-4')}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{label}</div>
+          <div className="mt-2 text-2xl font-bold tabular-nums text-zinc-950">{value}</div>
+        </div>
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-violet-50 text-[#7c3aed] ring-1 ring-violet-100">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      {hint && <p className="mt-2 text-xs leading-5 text-zinc-500">{hint}</p>}
+    </div>
+  )
+}
+
+function ProgressMeter({ completion }: { completion: number }) {
+  return (
+    <div>
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Profile strength</div>
+          <div className="mt-1 text-3xl font-bold tabular-nums text-zinc-950">{completion}%</div>
+        </div>
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-100">
+        <div className="h-full rounded-full bg-[#7c3aed] transition-all" style={{ width: `${completion}%` }} />
+      </div>
+    </div>
+  )
+}
+
+function Checklist({
+  missingItems,
+  reelCount,
+  approvedReelCount,
+  approvalStatus,
+}: {
+  missingItems: string[]
+  reelCount: number
+  approvedReelCount: number
+  approvalStatus: string
+}) {
+  const rows = [
+    { label: 'Profile details saved', done: missingItems.length === 0 },
+    { label: 'Trial reel preview uploaded', done: reelCount > 0 },
+    { label: 'Linchpin profile review', done: approvalStatus === 'approved' },
+    { label: 'Approved reel visible in marketplace', done: approvedReelCount > 0 && approvalStatus === 'approved' },
+  ]
+
+  return (
+    <div className="space-y-3">
+      {rows.map((row) => (
+        <div key={row.label} className="flex items-center gap-2 text-sm">
+          {row.done ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <Clock className="h-4 w-4 text-zinc-400" />
+          )}
+          <span className={row.done ? 'text-zinc-800' : 'text-zinc-500'}>{row.label}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function RequestList({
+  requests,
+  busyRequest,
+  onRespond,
+}: {
+  requests: CreatorRequest[]
+  busyRequest: string | null
+  onRespond: (id: string, action: 'available' | 'unavailable') => void
+}) {
+  return (
+    <section className={panelClass} id="requests">
+      <div className="border-b border-zinc-200 p-5">
+        <h2 className="text-lg font-semibold text-zinc-950">Campaign requests</h2>
+        <p className="mt-1 text-sm text-zinc-500">
+          You can mark availability here. Linchpin manages the client relationship and final confirmation.
+        </p>
+      </div>
+      <div className="divide-y divide-zinc-200">
+        {requests.length === 0 && (
+          <div className="p-8 text-center text-sm text-zinc-500">No campaign requests yet.</div>
+        )}
+        {requests.map((request) => (
+          <div key={request.id} className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="font-semibold text-zinc-950">
+                  {request.campaign_name ?? request.org_name ?? 'Brand request'}
+                </div>
+                <StatusBadge status={request.status} />
+              </div>
+              <div className="mt-2 text-sm text-zinc-600">
+                {[request.brief.brand_category, request.brief.goal, request.brief.format].filter(Boolean).join(' - ') ||
+                  'Campaign brief pending Linchpin review'}
+              </div>
+              {(request.campaign_start_date || request.campaign_end_date) && (
+                <div className="mt-1.5 text-xs text-zinc-500">
+                  {request.campaign_start_date && <>Starts: {request.campaign_start_date}</>}
+                  {request.campaign_start_date && request.campaign_end_date && ' - '}
+                  {request.campaign_end_date && <>Ends: {request.campaign_end_date}</>}
+                </div>
+              )}
+              {request.deliverables && (
+                <div className="mt-1 text-xs text-zinc-500">Deliverables: {request.deliverables}</div>
+              )}
+              {request.client_notes && (
+                <div className="mt-2 rounded-md bg-zinc-50 p-3 text-sm text-zinc-600">{request.client_notes}</div>
+              )}
+              {request.admin_notes && <div className="mt-2 text-sm text-zinc-500">{request.admin_notes}</div>}
+            </div>
+            {request.status === 'requested' ? (
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={busyRequest === request.id}
+                  onClick={() => onRespond(request.id, 'available')}
+                  className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-700 px-3 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60"
+                >
+                  <CheckCircle2 className="h-4 w-4" /> Available
+                </button>
+                <button
+                  disabled={busyRequest === request.id}
+                  onClick={() => onRespond(request.id, 'unavailable')}
+                  className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-60"
+                >
+                  <XCircle className="h-4 w-4" /> Unavailable
+                </button>
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  )
 }
 
 export function InfluencerDashboardClient({
@@ -97,9 +261,17 @@ export function InfluencerDashboardClient({
   })
   const [approvalStatus, setApprovalStatus] = useState(influencer.approval_status)
   const [localRequests, setLocalRequests] = useState(requests)
+  const [localReels, setLocalReels] = useState(reels)
   const [busyRequest, setBusyRequest] = useState<string | null>(null)
+  const [editingProfile, setEditingProfile] = useState(approvalStatus === 'draft' || approvalStatus === 'rejected')
 
-  const reelCount = reels.length
+  const reelCount = localReels.length
+  const approvedReelCount = localReels.filter((reel) => reel.approval_status === 'approved').length
+  const pendingReelCount = localReels.filter((reel) => reel.approval_status === 'pending_review').length
+  const pendingCount = localRequests.filter((request) => request.status === 'requested').length
+  const activeRequestCount = localRequests.filter((request) =>
+    ['requested', 'under_review', 'confirmed', 'script_ready', 'in_production'].includes(request.status)
+  ).length
 
   const completion = useMemo(() => {
     const checks = [
@@ -172,7 +344,10 @@ export function InfluencerDashboardClient({
       toast.error(json.error ?? 'Could not save profile')
       return
     }
-    if (submit) setApprovalStatus('pending_review')
+    if (submit) {
+      setApprovalStatus('pending_review')
+      setEditingProfile(false)
+    }
     toast.success(submit ? 'Profile submitted for review' : 'Profile saved')
   }
 
@@ -195,36 +370,54 @@ export function InfluencerDashboardClient({
     toast.success(action === 'available' ? 'Marked available' : 'Marked unavailable')
   }
 
-  const pendingCount = localRequests.filter((r) => r.status === 'requested').length
-  const isPendingReview = approvalStatus === 'pending_review'
+  const firstName = (profile.display_name || influencer.name).split(' ')[0] || 'Creator'
+  const submittedAt = formatDate(influencer.profile_submitted_at)
+  const approvedAt = formatDate(influencer.approved_at)
+
+  const showOnboarding = approvalStatus === 'draft' || approvalStatus === 'rejected' || editingProfile
+  const showPortfolioEditor = approvalStatus !== 'approved' || editingProfile
 
   return (
-    <div className="space-y-8">
-      {isPendingReview && (
+    <div className="space-y-6">
+      {approvalStatus === 'pending_review' && !editingProfile && (
         <section className={cn(panelClass, 'overflow-hidden')}>
-          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_280px]">
-            <div className="space-y-4">
+          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_320px]">
+            <div className="space-y-5">
               <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800 ring-1 ring-amber-200">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Under Linchpin review
               </div>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">
-                  Sit tight, we&apos;re reviewing your profile.
+                <h1 className="max-w-3xl text-3xl font-semibold tracking-tight text-zinc-950">
+                  Sit tight, {firstName}. Your creator profile is in review.
                 </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
-                  Your creator profile has been sent to the Linchpin team. We&apos;ll review your public bio,
-                  trial reels, and campaign fit before making it visible to brands.
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+                  Your profile is no longer in onboarding. Linchpin is checking your public profile, trial reels,
+                  and campaign fit before brands can request you in the marketplace.
                 </p>
               </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className={cn(softPanelClass, 'p-4')}>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Submitted</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-900">{submittedAt ?? 'Today'}</div>
+                </div>
+                <div className={cn(softPanelClass, 'p-4')}>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Trial reels</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-900">{reelCount} uploaded</div>
+                </div>
+                <div className={cn(softPanelClass, 'p-4')}>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Visibility</div>
+                  <div className="mt-1 text-sm font-semibold text-zinc-900">Locked until approval</div>
+                </div>
+              </div>
               <div className="flex flex-wrap gap-3">
-                <a
-                  href="#profile-form"
+                <button
+                  onClick={() => setEditingProfile(true)}
                   className="inline-flex h-10 items-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
                 >
                   <Pencil className="h-4 w-4" />
                   Edit profile
-                </a>
+                </button>
                 <a
                   href="#portfolio"
                   className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
@@ -233,38 +426,113 @@ export function InfluencerDashboardClient({
                 </a>
               </div>
             </div>
-            <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-                    Profile progress
-                  </div>
-                  <div className="mt-1 text-3xl font-bold tabular-nums text-zinc-950">
-                    {completion}%
-                  </div>
-                </div>
-                <StatusBadge status={approvalStatus} />
-              </div>
-              <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
-                <div
-                  className="h-full rounded-full bg-[#7c3aed] transition-all"
-                  style={{ width: `${completion}%` }}
+            <div className={cn(softPanelClass, 'space-y-5 p-5')}>
+              <ProgressMeter completion={completion} />
+              <div className="border-t border-zinc-200 pt-4">
+                <Checklist
+                  missingItems={missingItems}
+                  reelCount={reelCount}
+                  approvedReelCount={approvedReelCount}
+                  approvalStatus={approvalStatus}
                 />
               </div>
-              {missingItems.length > 0 ? (
-                <div className="mt-4 space-y-1">
-                  <div className="text-xs font-medium text-zinc-600">Still worth improving</div>
-                  {missingItems.slice(0, 4).map((item) => (
+              <p className="rounded-md bg-white p-3 text-xs leading-5 text-zinc-500 ring-1 ring-zinc-200">
+                Brands cannot see your direct contact details. Linchpin handles availability, negotiation, and campaign coordination.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {approvalStatus === 'approved' && !editingProfile && (
+        <section className={cn(panelClass, 'overflow-hidden')}>
+          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_300px]">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-800 ring-1 ring-emerald-200">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Live in marketplace
+              </div>
+              <div>
+                <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">
+                  Your creator profile is live, {firstName}.
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+                  Brands can discover your approved profile and request you through Linchpin. Keep your availability,
+                  pricing range, and reel previews current so the team can match you faster.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setEditingProfile(true)}
+                  className="inline-flex h-10 items-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit profile
+                </button>
+                <a
+                  href="#requests"
+                  className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+                >
+                  View requests
+                </a>
+              </div>
+            </div>
+            <div className={cn(softPanelClass, 'space-y-4 p-5')}>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Marketplace visibility</div>
+                  <div className="mt-1 text-lg font-semibold text-zinc-950">Live</div>
+                </div>
+                <ToggleRight className="h-7 w-7 text-emerald-600" />
+              </div>
+              <div className="border-t border-zinc-200 pt-4">
+                <div className="text-xs text-zinc-500">Approved {approvedAt ?? 'by Linchpin'}</div>
+                <div className="mt-2 text-sm text-zinc-700">
+                  {profile.is_available ? 'Marked available for campaigns.' : 'Marked unavailable. Turn availability on when ready.'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {approvalStatus === 'rejected' && !editingProfile && (
+        <section className={cn(panelClass, 'overflow-hidden border-red-200 bg-red-50/40')}>
+          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_300px]">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-800 ring-1 ring-red-200">
+                <XCircle className="h-3.5 w-3.5" />
+                Changes needed
+              </div>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight text-zinc-950">
+                Update your profile and resubmit.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+                Linchpin reviewed your profile and needs changes before it can go live in the marketplace.
+              </p>
+              {influencer.rejection_reason && (
+                <div className="mt-4 rounded-md border border-red-200 bg-white p-4 text-sm leading-6 text-red-800">
+                  {influencer.rejection_reason}
+                </div>
+              )}
+              <button
+                onClick={() => setEditingProfile(true)}
+                className="mt-5 inline-flex h-10 items-center gap-2 rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+              >
+                <Pencil className="h-4 w-4" />
+                Fix profile
+              </button>
+            </div>
+            <div className={cn(softPanelClass, 'p-5')}>
+              <ProgressMeter completion={completion} />
+              {missingItems.length > 0 && (
+                <div className="mt-4 space-y-1.5">
+                  {missingItems.map((item) => (
                     <div key={item} className="flex items-center gap-1.5 text-xs text-zinc-500">
                       <Clock className="h-3 w-3 shrink-0" />
                       {item}
                     </div>
                   ))}
-                </div>
-              ) : (
-                <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  All required profile sections are complete.
                 </div>
               )}
             </div>
@@ -272,127 +540,92 @@ export function InfluencerDashboardClient({
         </section>
       )}
 
-      {/* Home widgets */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Profile completeness */}
-        <div className={cn(panelClass, 'p-4 space-y-2')}>
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Profile completeness</div>
-          <div className="text-2xl font-bold text-zinc-950">{completion}%</div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-zinc-100">
-            <div className="h-full rounded-full bg-[#7c3aed] transition-all" style={{ width: `${completion}%` }} />
-          </div>
-          {missingItems.length > 0 && (
-            <ul className="mt-1 space-y-0.5">
-              {missingItems.map((item) => (
-                <li key={item} className="flex items-center gap-1.5 text-xs text-zinc-500">
-                  <Clock className="h-3 w-3 shrink-0 text-zinc-400" />{item}
-                </li>
-              ))}
-            </ul>
-          )}
-          {missingItems.length === 0 && (
-            <div className="flex items-center gap-1.5 text-xs text-emerald-700">
-              <CheckCircle2 className="h-3 w-3" /> Profile complete
+      {(approvalStatus === 'draft' || showOnboarding) && (
+        <section className={cn(panelClass, 'p-5')} id="profile-form">
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <StatusBadge status={approvalStatus} />
+              <h2 className="mt-3 text-xl font-semibold text-zinc-950">
+                {approvalStatus === 'draft' ? 'Build your creator profile' : 'Edit public profile'}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-500">
+                Complete the details brands need to evaluate your fit. Your direct contact details are never shown to clients.
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Profile status */}
-        <div className={cn(panelClass, 'p-4 space-y-2')}>
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Profile status</div>
-          <StatusBadge status={approvalStatus} />
-          <p className="text-xs text-zinc-500">{APPROVAL_STATUS_DESCRIPTIONS[approvalStatus] ?? ''}</p>
-          {influencer.rejection_reason && approvalStatus === 'rejected' && (
-            <p className="text-xs text-red-600 bg-red-50 rounded p-2">{influencer.rejection_reason}</p>
-          )}
-        </div>
-
-        {/* Quick links */}
-        <div className={cn(panelClass, 'p-4 space-y-2')}>
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Quick links</div>
-          <div className="space-y-1.5">
-            <a href="#profile-form" className="block text-sm text-[#7c3aed] hover:underline">Edit profile</a>
-            <a href="#portfolio" className="block text-sm text-[#7c3aed] hover:underline">Portfolio &amp; reels</a>
-            <a href="#requests" className="block text-sm text-[#7c3aed] hover:underline">Campaign requests</a>
-          </div>
-        </div>
-
-        {/* Campaign requests + profile views */}
-        <div className={cn(panelClass, 'p-4 space-y-4')}>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Campaign requests</div>
-            <div className="text-2xl font-bold text-zinc-950">{localRequests.length}</div>
-            {pendingCount > 0 && (
-              <a href="#requests" className="inline-block rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100">
-                {pendingCount} new request{pendingCount !== 1 ? 's' : ''}
-              </a>
+            {approvalStatus !== 'draft' && (
+              <button
+                onClick={() => setEditingProfile(false)}
+                className="h-9 rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+              >
+                Close editor
+              </button>
             )}
           </div>
-          <div className="space-y-1">
-            <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Profile views</div>
-            <div className="text-2xl font-bold text-zinc-950">{influencer.profile_views ?? 0}</div>
-          </div>
-        </div>
-      </section>
+          <InfluencerProfileForm
+            profile={profile}
+            setProfile={setProfile}
+            saving={saving}
+            onSave={saveProfile}
+            completion={completion}
+          />
+        </section>
+      )}
 
-      {/* Profile form */}
-      <section className={cn(panelClass, 'p-5')}>
-        <div className="mb-5">
-          <h2 className="text-lg font-semibold text-zinc-950">Public profile</h2>
-        </div>
-        <InfluencerProfileForm
-          profile={profile}
-          setProfile={setProfile}
-          saving={saving}
-          onSave={saveProfile}
-          completion={completion}
-        />
-      </section>
-
-      {/* Portfolio */}
-      <InfluencerPortfolioManager initialReels={reels} />
-
-      {/* Campaign requests */}
-      <section className={panelClass} id="requests">
-        <div className="border-b border-zinc-200 p-5">
-          <h2 className="text-lg font-semibold text-zinc-950">Campaign requests</h2>
-          <p className="mt-1 text-sm text-zinc-500">You can mark availability here. Linchpin manages the client relationship and final confirmation.</p>
-        </div>
-        <div className="divide-y divide-zinc-200">
-          {localRequests.length === 0 && <div className="p-8 text-center text-sm text-zinc-500">No campaign requests yet.</div>}
-          {localRequests.map((request) => (
-            <div key={request.id} className="grid gap-4 p-5 lg:grid-cols-[1fr_auto]">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="font-semibold">{request.campaign_name ?? request.org_name ?? 'Brand request'}</div>
-                  <StatusBadge status={request.status} />
-                </div>
-                <div className="mt-2 text-sm text-zinc-600">
-                  {[request.brief.brand_category, request.brief.goal, request.brief.format].filter(Boolean).join(' - ') || 'Campaign brief pending Linchpin review'}
-                </div>
-                {(request.campaign_start_date || request.campaign_end_date) && (
-                  <div className="mt-1.5 text-xs text-zinc-500">
-                    {request.campaign_start_date && <>Starts: {request.campaign_start_date}</>}
-                    {request.campaign_start_date && request.campaign_end_date && ' · '}
-                    {request.campaign_end_date && <>Ends: {request.campaign_end_date}</>}
-                  </div>
-                )}
-                {request.deliverables && <div className="mt-1 text-xs text-zinc-500">Deliverables: {request.deliverables}</div>}
-                {request.client_notes && <div className="mt-2 rounded-md bg-zinc-50 p-3 text-sm text-zinc-600">{request.client_notes}</div>}
-                {request.admin_notes && <div className="mt-2 text-sm text-zinc-500">{request.admin_notes}</div>}
-              </div>
-              <div className="flex items-center gap-2">
-                <button disabled={busyRequest === request.id} onClick={() => respondToRequest(request.id, 'available')} className="inline-flex h-9 items-center gap-2 rounded-md bg-emerald-700 px-3 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:opacity-60">
-                  <CheckCircle2 className="h-4 w-4" /> Available
-                </button>
-                <button disabled={busyRequest === request.id} onClick={() => respondToRequest(request.id, 'unavailable')} className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:opacity-60">
-                  <XCircle className="h-4 w-4" /> Unavailable
-                </button>
-              </div>
+      {showPortfolioEditor ? (
+        <InfluencerPortfolioManager initialReels={localReels} onReelsChange={setLocalReels} />
+      ) : (
+        <section className={panelClass} id="portfolio">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 p-5">
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-950">Trial reel portfolio</h2>
+              <p className="mt-1 text-sm text-zinc-500">Approved previews brands can browse in the marketplace.</p>
             </div>
-          ))}
-        </div>
+            <button
+              onClick={() => setEditingProfile(true)}
+              className="h-9 rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-700 hover:bg-zinc-50"
+            >
+              Manage reels
+            </button>
+          </div>
+          <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
+            {localReels.length === 0 && (
+              <div className="col-span-full rounded-lg border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500">
+                No trial reels uploaded yet.
+              </div>
+            )}
+            {localReels.slice(0, 8).map((reel) => {
+              const src = reel.video_url || reel.gif_url || reel.thumbnail_url
+              return (
+                <div key={reel.id} className="overflow-hidden rounded-lg border border-zinc-200 bg-white">
+                  <div className="aspect-[9/16] bg-zinc-100">
+                    {src && reel.video_url ? (
+                      <video src={src} autoPlay muted loop playsInline className="h-full w-full object-cover" />
+                    ) : src ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={src} alt={reel.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs text-zinc-400">No preview</div>
+                    )}
+                  </div>
+                  <div className="space-y-2 p-3">
+                    <div className="truncate text-sm font-semibold text-zinc-950">{reel.title}</div>
+                    <StatusBadge status={reel.approval_status} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Profile views" value={influencer.profile_views ?? 0} icon={Eye} hint="Marketplace views after approval." />
+        <StatCard label="Requests received" value={localRequests.length} icon={Megaphone} hint={`${pendingCount} waiting for your availability.`} />
+        <StatCard label="Active requests" value={activeRequestCount} icon={Sparkles} hint="Requested, confirmed, or in production." />
+        <StatCard label="Approved reels" value={approvedReelCount} icon={FileVideo} hint={`${pendingReelCount} still under review.`} />
       </section>
+
+      <RequestList requests={localRequests} busyRequest={busyRequest} onRespond={respondToRequest} />
     </div>
   )
 }

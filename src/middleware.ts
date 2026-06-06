@@ -17,7 +17,6 @@ export async function middleware(req: NextRequest) {
   const isDashboard = pathname.startsWith('/dashboard')
   const isAdmin = pathname.startsWith('/admin')
   const isInfluencer = pathname.startsWith('/influencer')
-  const isLogin = pathname === '/dashboard/login'
   const isPublic =
     PUBLIC_PATHS.has(pathname) || pathname.startsWith('/api/auth')
 
@@ -26,20 +25,6 @@ export async function middleware(req: NextRequest) {
     const url = req.nextUrl.clone()
     url.pathname = pathname.startsWith('/influencer') ? '/influencer/login' : '/dashboard/login'
     if (pathname !== '/dashboard') url.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(url)
-  }
-
-  if (hasSession && isLogin) {
-    const url = req.nextUrl.clone()
-    url.pathname = role === 'influencer' ? '/influencer/dashboard' : '/dashboard'
-    url.search = ''
-    return NextResponse.redirect(url)
-  }
-
-  if (hasSession && pathname === '/influencer/login') {
-    const url = req.nextUrl.clone()
-    url.pathname = role === 'influencer' ? '/influencer/dashboard' : '/dashboard'
-    url.search = ''
     return NextResponse.redirect(url)
   }
 
