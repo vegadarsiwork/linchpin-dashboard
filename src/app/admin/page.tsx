@@ -39,7 +39,7 @@ interface CreatorApplicationRow {
 interface CreatorRequestRow {
   id: string
   status: string
-  brief: string | null
+  brief: unknown
   created_at: string
   org_name: string | null
   influencer_name: string | null
@@ -83,6 +83,25 @@ function formatDate(value: string | null) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date)
+}
+
+function briefPreview(value: unknown) {
+  if (!value) return null
+  if (typeof value === 'string') return value
+  if (typeof value !== 'object') return String(value)
+
+  const brief = value as Record<string, unknown>
+  const parts = [
+    brief.brand_category,
+    brief.goal,
+    brief.target_audience,
+    brief.format,
+    brief.language,
+  ]
+    .map((part) => (typeof part === 'string' ? part.trim() : ''))
+    .filter(Boolean)
+
+  return parts.length > 0 ? parts.join(' - ') : 'Campaign brief submitted'
 }
 
 export default async function AllClientsPage() {
@@ -319,9 +338,9 @@ export default async function AllClientsPage() {
                 <div className="mt-1 text-sm text-zinc-500">
                   {request.influencer_name || 'No creator selected'}
                 </div>
-                {request.brief && (
+                {briefPreview(request.brief) && (
                   <p className="mt-2 line-clamp-2 text-xs text-zinc-500">
-                    {request.brief}
+                    {briefPreview(request.brief)}
                   </p>
                 )}
               </div>
